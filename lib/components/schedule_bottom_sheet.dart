@@ -18,6 +18,7 @@ class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
   int? startTime;
   int? endTime;
   String? content;
+  int? selectedColorId;
 
   @override
   Widget build(BuildContext context) {
@@ -60,9 +61,17 @@ class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
                       FutureBuilder<List<CategoryColor>>(
                           future: GetIt.I<LocalDatabase>().getCategoryColors(),
                           builder: (context, snapshot) {
-                            print(snapshot.data);
+                            if (snapshot.hasData &&
+                                selectedColorId == null &&
+                                snapshot.data!.isNotEmpty) {
+                              selectedColorId = snapshot.data![0].id;
+                            }
                             return _ColorPicker(
-                              colors: [],
+                              colors: snapshot.hasData ? snapshot.data! : [],
+                              selectedColorId: selectedColorId,
+                              colorIdSetter: (int id) {
+                                setState(() => selectedColorId = id);
+                              },
                             );
                           }),
                       SizedBox(height: 8.0),
@@ -139,28 +148,50 @@ class _Content extends StatelessWidget {
   }
 }
 
-class _ColorPicker extends StatelessWidget {
-  final List<Color> colors;
+typedef ColorIdSetter = void Function(int id);
 
-  const _ColorPicker({Key? key, required this.colors}) : super(key: key);
+class _ColorPicker extends StatelessWidget {
+  final List<CategoryColor> colors;
+  final int? selectedColorId;
+  final ColorIdSetter colorIdSetter;
+
+  const _ColorPicker(
+      {Key? key,
+      required this.colors,
+      required this.selectedColorId,
+      required this.colorIdSetter})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Wrap(
       spacing: 8.0,
       runSpacing: 10.0,
-      children: colors.map((color) => renderColor(color)).toList(),
+      children: colors
+          .map(
+            (color) => GestureDetector(
+                onTap: () {
+                  colorIdSetter(color.id);
+                },
+                child: renderColor(color, selectedColorId == color.id)),
+          )
+          .toList(),
     );
   }
 
-  Widget renderColor(Color color) {
+  Widget renderColor(CategoryColor categoryColor, bool isSelected) {
     return Container(
       width: 32.0,
       height: 32.0,
       decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color,
-      ),
+          shape: BoxShape.circle,
+          color: Color(int.parse('FF${categoryColor.hexCode}', radix: 16)),
+          border: isSelected
+              ? Border.all(
+                  color: Colors.black,
+                  width: 4.0,
+                )
+              : null),
     );
   }
 }
