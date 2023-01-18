@@ -34,6 +34,12 @@ class LocalDatabase extends _$LocalDatabase {
       innerJoin(categoryColors, categoryColors.id.equalsExp(schedules.colorId))
     ]);
     query.where(schedules.date.equals(date));
+    query.orderBy(
+      [
+        OrderingTerm.asc(schedules.startTime),
+      ],
+    );
+
     return query.watch().map((rows) => rows
         .map((row) => ScheduleWithColor(
             schedule: row.readTable(schedules),
