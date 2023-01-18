@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 
 import 'package:scheduler/models/category_color.dart';
 import 'package:scheduler/models/schedule.dart';
+import 'package:scheduler/models/schedule_with_color.dart';
 
 part 'drift_database.g.dart';
 
@@ -27,6 +28,18 @@ class LocalDatabase extends _$LocalDatabase {
 
   Future<List<CategoryColor>> getCategoryColors() =>
       select(categoryColors).get();
+
+  Stream<List<ScheduleWithColor>> watchSchedules(DateTime date) {
+    final query = select(schedules).join([
+      innerJoin(categoryColors, categoryColors.id.equalsExp(schedules.colorId))
+    ]);
+    query.where(schedules.date.equals(date));
+    return query.watch().map((rows) => rows
+        .map((row) => ScheduleWithColor(
+            schedule: row.readTable(schedules),
+            categoryColor: row.readTable(categoryColors)))
+        .toList());
+  }
 
   @override
   int get schemaVersion => 1;

@@ -1,13 +1,14 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:scheduler/components/custom_text_field.dart';
 import 'package:scheduler/constants/colors.dart';
 import 'package:scheduler/database/drift_database.dart';
-import 'package:scheduler/models/category_color.dart';
-import 'package:scheduler/database/drift_database.dart';
 
 class ScheduleBottomSheet extends StatefulWidget {
-  const ScheduleBottomSheet({super.key});
+  final DateTime selectedDate;
+
+  const ScheduleBottomSheet({super.key, required this.selectedDate});
 
   @override
   State<ScheduleBottomSheet> createState() => _ScheduleBottomSheetState();
@@ -39,7 +40,6 @@ class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
                     const EdgeInsets.only(left: 8.0, right: 8.0, top: 16.0),
                 child: Form(
                   key: formKey,
-                  autovalidateMode: AutovalidateMode.always,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -87,16 +87,22 @@ class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
     );
   }
 
-  void onSavePressed() {
+  void onSavePressed() async {
     if (formKey.currentState == null) return;
 
     if (formKey.currentState!.validate()) {
       formKey.currentState!.save();
 
-      print('-------');
-      print('startTime: $startTime');
-      print('endTime: $endTime');
-      print('content: $content');
+      final key =
+          await GetIt.I<LocalDatabase>().createSchedule(SchedulesCompanion(
+        date: Value(widget.selectedDate),
+        startTime: Value(startTime!),
+        endTime: Value(endTime!),
+        content: Value(content!),
+        colorId: Value(selectedColorId!),
+      ));
+
+      Navigator.of(context).pop();
     } else {
       print('에러가 있습니다');
     }
