@@ -7,8 +7,10 @@ import 'package:scheduler/database/drift_database.dart';
 
 class ScheduleBottomSheet extends StatefulWidget {
   final DateTime selectedDate;
+  final int? scheduleId;
 
-  const ScheduleBottomSheet({super.key, required this.selectedDate});
+  const ScheduleBottomSheet(
+      {super.key, required this.selectedDate, this.scheduleId});
 
   @override
   State<ScheduleBottomSheet> createState() => _ScheduleBottomSheetState();
